@@ -1,6 +1,6 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy import create_engine
 from eralchemy2 import render_er
@@ -14,6 +14,7 @@ class User(Base):
     email = Column(String(120), unique=True, nullable=False)
     password = Column(String(80), unique=False, nullable=False)
     is_active= Column(Boolean(), unique=False, nullable=False) 
+    favorites = relationship("Favorites", backref="user", lazy=True)
 
 class Planet(Base):
     __tablename__ = 'planet'
@@ -30,22 +31,7 @@ class Planet(Base):
     rotation_period = Column(Integer, nullable=False)
     surface_water = Column(Integer, nullable=False)
     terrain = Column(String, nullable=False)
-
-pilots = Table (
-    "pilots",
-    Base.metadata,
-    Column("id", Integer, primary_key=True),
-    Column("vehicle_id", ForeignKey("vehicle.id")),
-    Column("character_id"), ForeignKey("character.id")
-    )
-
-passengers = Table(
-    "passengers",
- Column("id", Integer, primary_key=True),
-    Column("vehicle_id", ForeignKey("vehicle.id")),
-    Column("character_id", ForeignKey("character.id")),
-)
-
+    favorites = relationship("Favorites", backref="planet", lazy=True)
 
 class Vehicle(Base):
     __tablename__ = 'vehicle'
@@ -62,12 +48,7 @@ class Vehicle(Base):
     url = Column(String, nullable=False, unique=True)
     created = Column(DateTime, nullable=False)
     edited = Column(DateTime, nullable=False)
-
-    pilots = relationship(
-        "Character",
-        secondary=pilots,
-        backref="vehicles",
-    )
+    favorites = relationship("Favorites", backref="vehicle", lazy=True)
 
 class Character(Base):
     __tablename__ = "character"
@@ -88,6 +69,18 @@ class Character(Base):
     created = Column(DateTime)
     edited = Column(DateTime)
     url = Column(String)
+    favorites = relationship("Favorites", backref="character", lazy=True)
+
+    
+class Favorites(Base):
+    __tablename__="favorites"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    planet_id = Column(Integer, ForeignKey("planet.id"))
+    vehicle_id = Column(Integer, ForeignKey("vehicle.id"))
+    character_id = Column(Integer, ForeignKey("character.id"))
+    
+
     def to_dict(self):
         return {}
 
